@@ -1,0 +1,40 @@
+work_dir: ./work_dir/kinetics/agcn_bone
+model_saved_name: ./runs/ki_agcn_bone
+
+# feeder
+feeder: feeders.feeder.Feeder
+train_feeder_args:
+  random_choose: True
+  random_move: True
+  window_size: 150
+  data_path: ./data/kinetics/train_data_bone.npy
+  label_path: ./data/kinetics/train_label.pkl
+  debug: False
+
+test_feeder_args:
+  data_path: ./data/kinetics/val_data_bone.npy
+  label_path: ./data/kinetics/val_label.pkl
+
+# model
+model: model.agcn.Model
+model_args:
+  num_class: 400
+  num_person: 2
+  num_point: 18
+  graph: graph.kinetics.Graph
+  graph_args:
+    labeling_mode: 'spatial'
+
+#optim
+weight_decay: 0.0001
+base_lr: 0.1
+step: [45, 55]
+
+# training
+device: [0, 1, 2, 3]
+batch_size: 128
+test_batch_size: 256
+num_epoch: 65
+nesterov: True
+
+
