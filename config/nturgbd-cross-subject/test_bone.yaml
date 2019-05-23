@@ -17,10 +17,10 @@ model_args:
 
 # test
 phase: test
-device: [0,1,2,3]
+device: [4,5,6,7]
 test_batch_size: 256
-weights: ./pre_train/ntu_cs_agcn_bone-49-31300.pt
+weights: ./runs/ntu_cs_agcn_bone-49-31300.pt
 
-work_dir: ./runs/ntu/xsub/agcn_test_bone
+work_dir: ./work_dir/ntu/xsub/agcn_test_bone
 model_saved_name: ./runs/ntu_cs_agcn_test_bone
 save_score: True

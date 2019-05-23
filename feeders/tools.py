@@ -1,5 +1,6 @@
-import numpy as np
 import random
+
+import numpy as np
 
 
 def downsample(data_numpy, step, random_sample=True):
@@ -50,7 +51,7 @@ def random_choose(data_numpy, size, auto_pad=True):
         else:
             return data_numpy
     else:
-        begin = random.randint(0, T - size)  # TODO
+        begin = random.randint(0, T - size)
         return data_numpy[:, begin:begin + size, :, :]
 
 
@@ -62,7 +63,7 @@ def random_move(data_numpy,
     # input: C,T,V,M
     C, T, V, M = data_numpy.shape
     move_time = random.choice(move_time_candidate)
-    node = np.arange(0, T, T * 1.0 / move_time).round().astype(int)  # TODO
+    node = np.arange(0, T, T * 1.0 / move_time).round().astype(int)
     node = np.append(node, T)
     num_node = len(node)
 
