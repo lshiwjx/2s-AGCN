@@ -370,13 +370,13 @@ class Processor():
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
-            loss_value.append(loss.data[0])
+            loss_value.append(loss)
             timer['model'] += self.split_time()
 
             value, predict_label = torch.max(output.data, 1)
             acc = torch.mean((predict_label == label.data).float())
             self.train_writer.add_scalar('acc', acc, self.global_step)
-            self.train_writer.add_scalar('loss', loss.data[0], self.global_step)
+            self.train_writer.add_scalar('loss', loss, self.global_step)
             self.train_writer.add_scalar('loss_l1', l1, self.global_step)
             # self.train_writer.add_scalar('batch_time', process.iterable.last_duration, self.global_step)
 
@@ -439,7 +439,7 @@ class Processor():
                     l1 = 0
                 loss = self.loss(output, label)
                 score_frag.append(output.data.cpu().numpy())
-                loss_value.append(loss.data[0])
+                loss_value.append(loss)
 
                 _, predict_label = torch.max(output.data, 1)
                 step += 1
