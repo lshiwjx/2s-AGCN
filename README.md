@@ -1,6 +1,10 @@
 # 2s-AGCN
 Two-Stream Adaptive Graph Convolutional Networks for Skeleton-Based Action Recognition in CVPR19
 
+# Note
+
+PyTorch version should be 0.3! For PyTorch0.4 or higher, the codes need to be modified. 
+
 # Data Preparation
 
  - Download the raw data from [NTU-RGB+D](https://github.com/shahroudy/NTURGB-D) and [Skeleton-Kinetics](https://github.com/yysijie/st-gcn). Then put them under the data directory:
