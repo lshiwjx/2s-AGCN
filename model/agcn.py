@@ -1,9 +1,9 @@
+import math
+
+import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from torch.autograd import Variable
-import numpy as np
-import math
 
 
 def import_class(name):
@@ -19,18 +19,18 @@ def conv_branch_init(conv, branches):
     n = weight.size(0)
     k1 = weight.size(1)
     k2 = weight.size(2)
-    nn.init.normal(weight, 0, math.sqrt(2. / (n * k1 * k2 * branches)))
-    nn.init.constant(conv.bias, 0)
+    nn.init.normal_(weight, 0, math.sqrt(2. / (n * k1 * k2 * branches)))
+    nn.init.constant_(conv.bias, 0)
 
 
 def conv_init(conv):
-    nn.init.kaiming_normal(conv.weight, mode='fan_out')
-    nn.init.constant(conv.bias, 0)
+    nn.init.kaiming_normal_(conv.weight, mode='fan_out')
+    nn.init.constant_(conv.bias, 0)
 
 
 def bn_init(bn, scale):
-    nn.init.constant(bn.weight, scale)
-    nn.init.constant(bn.bias, 0)
+    nn.init.constant_(bn.weight, scale)
+    nn.init.constant_(bn.bias, 0)
 
 
 class unit_tcn(nn.Module):
@@ -56,7 +56,7 @@ class unit_gcn(nn.Module):
         inter_channels = out_channels // coff_embedding
         self.inter_c = inter_channels
         self.PA = nn.Parameter(torch.from_numpy(A.astype(np.float32)))
-        nn.init.constant(self.PA, 1e-6)
+        nn.init.constant_(self.PA, 1e-6)
         self.A = Variable(torch.from_numpy(A.astype(np.float32)), requires_grad=False)
         self.num_subset = num_subset
 
@@ -154,7 +154,7 @@ class Model(nn.Module):
         self.l10 = TCN_GCN_unit(256, 256, A)
 
         self.fc = nn.Linear(256, num_class)
-        nn.init.normal(self.fc.weight, 0, math.sqrt(2. / num_class))
+        nn.init.normal_(self.fc.weight, 0, math.sqrt(2. / num_class))
         bn_init(self.data_bn, 1)
 
     def forward(self, x):
