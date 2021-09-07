@@ -100,18 +100,6 @@ class Model(nn.Module):
             TCN_GCN_unit(256, 256, kernel_size, 1, **kwargs),
             TCN_GCN_unit(256, 256, kernel_size, 1, **kwargs),
         ))
-
-        # embedding and concat
-        self.embed1 = nn.Conv2d(64, 256, (1, 1))
-        self.embed2 = nn.Conv2d(128, 256, (1, 1))
-        self.embed3 = nn.Conv2d(256, 256, (1, 1))
-        
-        self.bn = nn.BatchNorm2d(256)
-        self.relu = nn.ReLU(inplace=True)
-        
-        self.w1 = nn.Parameter(torch.tensor(1, dtype=torch.float), requires_grad=True)
-        self.w2 = nn.Parameter(torch.tensor(1e-6, dtype=torch.float), requires_grad=True)
-        self.w3 = nn.Parameter(torch.tensor(1, dtype=torch.float), requires_grad=True)
         
         # initialize parameters for edge importance weighting
         if edge_importance_weighting:
@@ -123,7 +111,7 @@ class Model(nn.Module):
             self.edge_importance = [1] * len(self.st_gcn_networks)
         
         # fcn for prediction
-        self.fcn = nn.Conv2d(256*3, num_class, kernel_size=1)
+        self.fcn = nn.Conv2d(256, num_class, kernel_size=1)
         
     def forward(self, x):
         # data normalization
@@ -136,36 +124,16 @@ class Model(nn.Module):
         x = x.view(N * M, C, T, V)
 
         # forwad
-        for i, (stgcn, importance) in enumerate(zip(self.st_gcn_networks, self.edge_importance), 1):
+        for stgcn, importance in zip(self.st_gcn_networks, self.edge_importance):
             x = stgcn(x, self.A * importance)
-            if i == 4:
-                feature_1 = x
-            if i == 7:
-                feature_2 = x
-            if i == 10:
-                feature_3 = x
-        
+
         # global pooling
-        
-        feature_embed1 = self.relu(self.bn(self.embed1(feature_1)))
-        feature_embed1 = F.avg_pool2d(feature_embed1, feature_embed1.size()[2:])
-        feature_embed1 = feature_embed1.view(N, M, -1, 1, 1).mean(dim=1)
-        
-        feature_embed2 = self.relu(self.bn(self.embed2(feature_2)))
-        feature_embed2 = F.avg_pool2d(feature_embed2, feature_embed2.size()[2:])
-        feature_embed2 = feature_embed2.view(N, M, -1, 1, 1).mean(dim=1)
-        
-        feature_embed3 = self.relu(self.bn(self.embed3(feature_3)))
-        feature_embed3 = F.avg_pool2d(feature_embed3, feature_embed3.size()[2:])
-        feature_embed3 = feature_embed3.view(N, M, -1, 1, 1).mean(dim=1)
-        
-        # feature_embed = self.w1 * feature_embed1 + self.w2 * feature_embed2 + self.w3 * feature_embed3
-        feature_embed =  torch.cat((feature_embed1, feature_embed2, feature_embed3), dim=1)
-        # feature_embed = self.w1 * feature_embed1
-        
+        x = F.avg_pool2d(x, x.size()[2:])
+        x = x.view(N, M, -1, 1, 1).mean(dim=1)
+
         # prediction
         
-        x = self.fcn(feature_embed)
+        x = self.fcn(x)
         x = x.view(x.size(0), -1)
-        
+
         return x
