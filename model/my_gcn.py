@@ -26,9 +26,6 @@ class unit_gcn(nn.Module):
         n, kc, t, v = x.size()
         x = x.view(n, mat_kernel_size, kc // mat_kernel_size, t, v)
         x = torch.einsum('nkctv,kvw->nctw', (x, A))
-        # x = torch.matmul(x, A)
-        # x = x.view(n, c*mat_kernel_size, t, v)
-        # x = x.view(n, c, t, v).contiguous()
         return x
 
 
@@ -101,6 +98,19 @@ class Model(nn.Module):
             TCN_GCN_unit(256, 256, kernel_size, 1, **kwargs),
         ))
         
+        self.matrix_networks = nn.ModuleList((
+            nn.Conv2d(3, 3, (3, 3), padding=1),
+            nn.Conv2d(3, 3, (3, 3), padding=1),
+            nn.Conv2d(3, 3, (3, 3), padding=1),
+            nn.Conv2d(3, 3, (3, 3), padding=1),
+            nn.Conv2d(3, 3, (3, 3), padding=1),
+            nn.Conv2d(3, 3, (3, 3), padding=1),
+            nn.Conv2d(3, 3, (3, 3), padding=1),
+            nn.Conv2d(3, 3, (3, 3), padding=1),
+            nn.Conv2d(3, 3, (5, 5), padding=2),
+            nn.Conv2d(3, 3, (5, 5), padding=2)
+        ))
+        
         # initialize parameters for edge importance weighting
         if edge_importance_weighting:
             self.edge_importance = nn.ParameterList([
@@ -124,8 +134,11 @@ class Model(nn.Module):
         x = x.view(N * M, C, T, V)
 
         # forwad
-        for stgcn, importance in zip(self.st_gcn_networks, self.edge_importance):
-            x = stgcn(x, self.A * importance)
+        for st_gcn, mat_net, importance in zip(self.st_gcn_networks, self.matrix_networks, self.edge_importance):
+            self.A = torch.unsqueeze(self.A, 0)
+            self.A = mat_net(self.A)
+            self.A = torch.squeeze(self.A, 0)
+            x = st_gcn(x, self.A * importance)
 
         # global pooling
         x = F.avg_pool2d(x, x.size()[2:])
