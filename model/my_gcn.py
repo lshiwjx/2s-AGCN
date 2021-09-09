@@ -1,4 +1,3 @@
-from typing import ForwardRef
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -79,7 +78,7 @@ class Model(nn.Module):
                         requires_grad=False)
         self.register_buffer('A', A)
         
-        spatial_kernel_size = A.size(0)
+        spatial_kernel_size = A.size(0)*2
         temporal_kernel_size = 9
         kernel_size = (temporal_kernel_size, spatial_kernel_size)
         self.data_bn = nn.BatchNorm1d(in_channels * A.shape[1])
@@ -99,22 +98,23 @@ class Model(nn.Module):
         ))
         
         self.matrix_networks = nn.ModuleList((
-            nn.Conv2d(3, 3, (3, 3), padding=1),
-            nn.Conv2d(3, 3, (3, 3), padding=1),
-            nn.Conv2d(3, 3, (3, 3), padding=1),
-            nn.Conv2d(3, 3, (3, 3), padding=1),
-            nn.Conv2d(3, 3, (3, 3), padding=1),
-            nn.Conv2d(3, 3, (3, 3), padding=1),
-            nn.Conv2d(3, 3, (3, 3), padding=1),
-            nn.Conv2d(3, 3, (3, 3), padding=1),
-            nn.Conv2d(3, 3, (5, 5), padding=2),
-            nn.Conv2d(3, 3, (5, 5), padding=2)
+            nn.Conv2d(3, 6, (3, 3), padding=1),
+            nn.Conv2d(6, 6, (3, 3), padding=1),
+            nn.Conv2d(6, 6, (5, 5), padding=2),
+            nn.Conv2d(6, 6, (5, 5), padding=2),
+            nn.Conv2d(6, 6, (7, 7), padding=3),
+            nn.Conv2d(6, 6, (7, 7), padding=3),
+            nn.Conv2d(6, 6, (9, 9), padding=4),
+            nn.Conv2d(6, 6, (9, 9), padding=4),
+            nn.Conv2d(6, 6, (13, 13), padding=6),
+            nn.Conv2d(6, 6, (15, 15), padding=7)
         ))
         
         # initialize parameters for edge importance weighting
         if edge_importance_weighting:
             self.edge_importance = nn.ParameterList([
-                nn.Parameter(torch.ones(self.A.shape))
+                # nn.Parameter(torch.ones(self.A.shape))
+                nn.Parameter(torch.ones((6, 25, 25)))
                 for i in self.st_gcn_networks
             ])
         else:
