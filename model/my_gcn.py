@@ -16,14 +16,19 @@ class unit_gcn(nn.Module):
     def __init__(self, in_channels, out_channels, spa_kernel_size):
         super().__init__()
         spa_kernel_size = spa_kernel_size
-        self.conv = nn.Conv2d(in_channels, out_channels*spa_kernel_size, 1)
-    
+        self.conv_depth = nn.Conv2d(in_channels, in_channels, (5,5), padding=(2,2), groups=in_channels)
+        self.conv_point = nn.Conv2d(in_channels, out_channels*spa_kernel_size, (1,1))
+        self.bn1 = nn.BatchNorm2d(in_channels)
+        self.bn2 = nn.BatchNorm2d(out_channels*spa_kernel_size)
+        self.relu = nn.ReLU()
+        
     def forward(self, x, A):
-        mat_kernel_size = A.shape[0]
+        kernel_size = A.size(0)
         n, c, t, v = x.size()
-        x = self.conv(x)
+        x = self.relu(self.bn1(self.conv_depth(x)))
+        x = self.relu(self.bn2(self.conv_point(x)))
         n, kc, t, v = x.size()
-        x = x.view(n, mat_kernel_size, kc // mat_kernel_size, t, v)
+        x = x.view(n, kernel_size, kc // kernel_size, t, v)
         x = torch.einsum('nkctv,kvw->nctw', (x, A))
         return x
 
@@ -78,7 +83,7 @@ class Model(nn.Module):
                         requires_grad=False)
         self.register_buffer('A', A)
         
-        spatial_kernel_size = A.size(0)*2
+        spatial_kernel_size = A.size(0)
         temporal_kernel_size = 9
         kernel_size = (temporal_kernel_size, spatial_kernel_size)
         self.data_bn = nn.BatchNorm1d(in_channels * A.shape[1])
@@ -97,24 +102,11 @@ class Model(nn.Module):
             TCN_GCN_unit(256, 256, kernel_size, 1, **kwargs),
         ))
         
-        self.matrix_networks = nn.ModuleList((
-            nn.Conv2d(3, 6, (3, 3), padding=1),
-            nn.Conv2d(6, 6, (3, 3), padding=1),
-            nn.Conv2d(6, 6, (5, 5), padding=2),
-            nn.Conv2d(6, 6, (5, 5), padding=2),
-            nn.Conv2d(6, 6, (7, 7), padding=3),
-            nn.Conv2d(6, 6, (7, 7), padding=3),
-            nn.Conv2d(6, 6, (9, 9), padding=4),
-            nn.Conv2d(6, 6, (9, 9), padding=4),
-            nn.Conv2d(6, 6, (13, 13), padding=6),
-            nn.Conv2d(6, 6, (15, 15), padding=7)
-        ))
-        
         # initialize parameters for edge importance weighting
         if edge_importance_weighting:
             self.edge_importance = nn.ParameterList([
                 # nn.Parameter(torch.ones(self.A.shape))
-                nn.Parameter(torch.ones((6, 25, 25)))
+                nn.Parameter(torch.ones(A.size()))
                 for i in self.st_gcn_networks
             ])
         else:
@@ -133,11 +125,9 @@ class Model(nn.Module):
         x = x.permute(0, 1, 3, 4, 2).contiguous()
         x = x.view(N * M, C, T, V)
 
+        
         # forwad
-        for st_gcn, mat_net, importance in zip(self.st_gcn_networks, self.matrix_networks, self.edge_importance):
-            self.A = torch.unsqueeze(self.A, 0)
-            self.A = mat_net(self.A)
-            self.A = torch.squeeze(self.A, 0)
+        for st_gcn, importance in zip(self.st_gcn_networks, self.edge_importance):
             x = st_gcn(x, self.A * importance)
 
         # global pooling
