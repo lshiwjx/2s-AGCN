@@ -86,12 +86,10 @@ class Model(nn.Module):
         self.context_tem = self.context_tem.unsqueeze(0)
         
         # concat 
-        self.emb1 = nn.Conv2d(3, 32, (1, 1))
-        self.bn1 = nn.BatchNorm2d(32)
-        self.emb2 = nn.Conv2d(25, 32, (1, 1))
-        self.bn2 = nn.BatchNorm2d(32)
-        self.emb3 = nn.Conv2d(300, 32, (1, 1))
-        self.bn3 = nn.BatchNorm2d(32)
+        self.emb2 = nn.Conv2d(25, 1, (1, 1))
+        self.bn2 = nn.BatchNorm2d(1)
+        self.emb3 = nn.Conv2d(300, 1, (1, 1))
+        self.bn3 = nn.BatchNorm2d(1)
         self.relu = nn.ReLU()
                 
         spatial_kernel_size = A.size(0)
@@ -101,7 +99,7 @@ class Model(nn.Module):
         # kwargs0 = {k: v for k, v in kwargs.items() if k != 'dropout'}
         
         self.st_gcn_networks = nn.ModuleList((
-            TCN_GCN_unit(96, 64, kernel_size, 1, residual=False, **kwargs),
+            TCN_GCN_unit(5, 64, kernel_size, 1, residual=False, **kwargs),
             TCN_GCN_unit(64, 64, kernel_size, 1, **kwargs),
             TCN_GCN_unit(64, 64, kernel_size, 1, **kwargs),
             TCN_GCN_unit(64, 64, kernel_size, 1, **kwargs),
@@ -144,7 +142,7 @@ class Model(nn.Module):
         C2, T, V = z.size()[1:]
         z = z.expand(N*M, C2, T, V).cuda().float()
         
-        x = self.relu(self.bn1(self.emb1(x)))
+        
         y = self.relu(self.bn2(self.emb2(y)))
         z = self.relu(self.bn3(self.emb3(z)))
         x = torch.cat((x, y, z), dim=1)
