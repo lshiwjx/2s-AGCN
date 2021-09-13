@@ -86,10 +86,10 @@ class Model(nn.Module):
         self.context_tem = self.context_tem.unsqueeze(0)
         
         # concat 
-        self.emb2 = nn.Conv2d(25, 1, (1, 1))
-        self.bn2 = nn.BatchNorm2d(1)
-        self.emb3 = nn.Conv2d(300, 1, (1, 1))
-        self.bn3 = nn.BatchNorm2d(1)
+        self.emb2 = nn.Conv2d(25, 3, (1, 1))
+        self.bn2 = nn.BatchNorm2d(3)
+        self.emb3 = nn.Conv2d(300, 3, (1, 1))
+        self.bn3 = nn.BatchNorm2d(3)
         self.relu = nn.ReLU()
                 
         spatial_kernel_size = A.size(0)
@@ -99,7 +99,7 @@ class Model(nn.Module):
         # kwargs0 = {k: v for k, v in kwargs.items() if k != 'dropout'}
         
         self.st_gcn_networks = nn.ModuleList((
-            TCN_GCN_unit(5, 64, kernel_size, 1, residual=False, **kwargs),
+            TCN_GCN_unit(9, 64, kernel_size, 1, residual=False, **kwargs),
             TCN_GCN_unit(64, 64, kernel_size, 1, **kwargs),
             TCN_GCN_unit(64, 64, kernel_size, 1, **kwargs),
             TCN_GCN_unit(64, 64, kernel_size, 1, **kwargs),
