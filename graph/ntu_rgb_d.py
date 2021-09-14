@@ -46,8 +46,9 @@ if __name__ == '__main__':
     import os
 
     # os.environ['DISPLAY'] = 'localhost:11.0'
-    A = Graph('spatial').get_adjacency_matrix()
+    # A = Graph('spatial').get_adjacency_matrix()
+    A = Graph('new_sep').get_adjacency_matrix()
     for i in A:
         plt.imshow(i, cmap='gray')
         plt.show()
-    print(A)
+    print(A.shape)
