@@ -13,7 +13,7 @@ inward = [(i - 1, j - 1) for (i, j) in inward_ori_index]
 outward = [(j, i) for (i, j) in inward]
 neighbor = inward + outward
 
-new_self_index = [4, 9, 5, 24, 22, 17, 13, 20, 16]
+new_self_index = [3, 8, 4, 23, 21, 16, 12, 19, 15]
 new_self_links = [(i, i) for i in new_self_index]
 newup_links_index = [(24, 4), (22, 4), (17, 9), (13, 5), (20, 24), (16, 22), (20, 17), (16, 13), (17, 24), (13, 22), (25, 22), (20, 16)]
 newup_links = [(i - 1, j - 1) for (i, j) in newup_links_index]
