@@ -1,1 +1,1 @@
-from . import agcn, aagcn
+from . import st_gcn, agcn, aagcn, my_gcn
